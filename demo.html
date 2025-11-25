@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Series Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define the keyframes for the new "Fly-in and Blast" animation */
+        @keyframes fly-in-blast {
+            0% { opacity: 0; transform: translateX(-100vw) scale(0.1); filter: brightness(1); }
+            50% { opacity: 1; transform: translateX(0) scale(1); filter: brightness(1.5); }
+            70% { transform: scale(1.1) rotate(1deg); filter: brightness(2.5); }
+            80% { transform: scale(1) rotate(-1deg); filter: brightness(1.5); }
+            90% { transform: scale(1.05) rotate(0.5deg); filter: brightness(1); }
+            100% { opacity: 1; transform: scale(1) rotate(0); filter: brightness(1); }
+        }
+        .header-animate {
+            animation: fly-in-blast 3s ease-in-out 1; 
+        }
+
+        /* Keyframes for the modal entry */
+        @keyframes pop-success {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* NEW: Keyframes for the Party Popper Success Animation */
+        @keyframes confetti-spray {
+            0% { 
+                transform: scale(0.8) rotate(0deg); 
+                opacity: 0;
+            }
+            30% { 
+                transform: scale(1.1) rotate(2deg); 
+                opacity: 1; 
+                box-shadow: 0 0 20px rgba(74, 222, 128, 0.8); /* green glow */
+            }
+            60% { 
+                transform: scale(1) rotate(-2deg); 
+                box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); 
+            }
+            100% { 
+                transform: scale(1) rotate(0deg); 
+                opacity: 1;
+            }
+        }
+        .animate-confetti-spray {
+            /* Use a celebratory cubic-bezier for a bouncy, pop effect */
+            animation: confetti-spray 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) 1 forwards;
+        }
+
+        /* Modal Backdrop and Content Styles - Full screen overlay */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); /* Darker backdrop */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #f7f7f7; /* Light background for modal */
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 95%;
+            width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            transform: scale(0.8);
+            opacity: 0;
+            animation: pop-success 0.5s forwards;
+            border: 5px solid #3b82f6;
+        }
+
+        /* Styling for the large start button area */
+        #splash-screen {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Chip styling */
+        .series-chip {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .series-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Result container styling for better visual separation */
+        #result-container {
+            min-height: 80vh; /* Ensure it takes up enough screen space */
+        }
+
+        /* Custom glow effect for the logos (Step 3 & 4) */
+        .logo-glow {
+            /* Initial subtle shadow */
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .logo-glow:hover {
+            /* Glow effect: horizontal offset, vertical offset, blur radius, color */
+            filter: drop-shadow(0 0 8px #3b82f6) drop-shadow(0 0 15px #2563eb); /* Blue glow */
+            transform: scale(1.2); /* Scale up slightly on hover */
+        }
+        
+        /* --- NEW STYLES FOR ENHANCED FOOTER --- */
+        .footer-logo {
+            position: fixed;
+            bottom: 0px; /* Aligned with the bottom of the screen */
+            width: 60px; /* Fixed size */
+            height: 60px;
+            object-fit: contain; /* Ensure the image fits without distortion */
+            padding: 5px; /* Padding for visual separation/glow */
+            background-color: rgba(255, 255, 255, 0.1); /* Subtle background */
+            border-radius: 50%;
+            z-index: 1000; /* Ensure logos are above everything except the modal backdrop */
+            transition: all 0.3s ease-in-out;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+        }
+
+        .footer-logo:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 10px #f97316) drop-shadow(0 0 20px #fb923c); /* Orange/Amber Glow on hover */
+        }
+        
+        .footer-logo.left {
+            left: 20px; /* Position from left corner */
+        }
+
+        .footer-logo.right {
+            right: 20px; /* Position from right corner */
+        }
+        
+        /* Style for the MITRAJ & BHARGAV text with glow effect */
+        .glow-text {
+            color: #f87171; /* Text color */
+            text-decoration: none; /* Remove underline from anchor style */
+            transition: text-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 1.25rem; /* 20px */
+            line-height: 1.75rem; /* 28px */
+        }
+        
+        .glow-text:hover {
+            /* Red/Pink glow */
+            text-shadow: 0 0 5px #fca5a5, 0 0 10px #f87171, 0 0 15px #ef4444; 
+            transform: translateY(-2px); /* Slight lift */
+        }
+        /* --- END NEW STYLES --- */
+
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen relative"> <div id="splash-screen" class="text-white text-center">
+        <h1 class="text-6xl sm:text-7xl font-extrabold text-blue-400 mb-8 header-animate">
+            Fibonacci Series Builder
+        </h1>
+        <button id="start-button"
+                class="bg-green-500 hover:bg-green-600 text-white font-extrabold py-5 px-10 rounded-full shadow-2xl transition duration-300 ease-in-out transform hover:scale-110 active:scale-95 text-3xl">
+            Let's Create Fibonacci Series
+        </button>
+    </div>
+
+    <div id="series-builder-modal" class="modal-backdrop hidden">
+        <div class="modal-content text-center space-y-8">
+            <h3 class="text-4xl font-extrabold text-blue-700 border-b pb-4">
+                Interactive Series Builder
+            </h3>
+            
+            <div id="modal-series-display" class="w-full min-h-16 bg-white border-2 border-gray-300 rounded-lg p-4 shadow-inner flex flex-wrap items-center justify-center gap-3">
+                </div>
+            
+            <div id="modal-prompt-area" class="p-5 rounded-xl bg-yellow-100 border-4 border-yellow-300 shadow-lg space-y-4">
+                <p id="prompt-text" class="text-2xl font-bold text-gray-800">
+                    Enter a value to continue series
+                </p>
+                <div class="flex flex-wrap justify-center items-center gap-2 text-3xl font-mono font-bold text-gray-800">
+                    <span class="text-xl font-semibold text-gray-700">(Hint: Last two digits are:</span>
+                    <span id="prompt-num1" class="text-red-600">?</span> 
+                    <span class="text-gray-500">,</span> 
+                    <span id="prompt-num2" class="text-red-600">?</span>
+                    <span class="text-xl font-semibold text-gray-700">)</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <input type="number" id="modal-number-input" placeholder="Enter next number..."
+                       class="flex-grow p-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-lg transition duration-150 min-w-[200px] text-2xl font-mono text-center">
+                
+                <button id="modal-add-button"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-4 px-8 rounded-xl shadow-xl transition duration-300 ease-in-out transform hover:scale-105 active:scale-95 text-xl">
+                    Add Number
+                </button>
+            </div>
+
+            <button id="finish-button"
+                    class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-150 mt-6 text-lg">
+                Finish & Show C Code
+            </button>
+        </div>
+    </div>
+
+    <div id="result-container" class="absolute inset-0 pt-10 px-4 bg-gray-900 overflow-y-auto hidden">
+        <div class="max-w-4xl w-full mx-auto bg-gray-50 p-8 md:p-12 rounded-2xl shadow-2xl space-y-8">
+            
+            <h2 id="final-status" class="text-3xl font-bold text-center p-4 rounded-lg"></h2>
+            
+            <div id="validated-series-display" class="hidden p-6 rounded-xl shadow-xl bg-white text-gray-800 text-center text-2xl font-mono font-extrabold border-4 border-green-500 flex flex-wrap justify-center gap-3">
+                </div>
+
+            <div id="code-compiler-box" class="w-full bg-gray-900 text-white p-6 rounded-xl shadow-2xl font-mono hidden">
+                <div class="font-bold mb-3 border-b border-gray-700 pb-2 text-lg text-yellow-400">Validated C Code Output:</div>
+                <pre id="c-code-output" class="whitespace-pre-wrap text-sm text-green-400">
+                </pre>
+            </div>
+
+            <button id="start-new-button"
+                    class="w-full bg-green-500 hover:bg-green-600 text-white font-extrabold py-4 rounded-xl shadow-xl transition duration-300 text-xl">
+                Start A New Series
+            </button>
+        </div>
+        <div class="h-10"></div> </div>
+
+    <div id="enhanced-signature-area" class="fixed bottom-0 w-full bg-gray-800 text-gray-500 py-4 text-center border-t border-gray-700 z-50">
+        <p class="text-xl font-semibold">
+            Created by 
+            <span class="italic font-bold glow-text">MITRAJ & BHARGAV</span>
+        </p>
+    </div>
+
+    <img src="https://universitykart.b-cdn.net/Content/upload/admin/ljttqutu.5w1.jfif" 
+         alt="University Kart Logo" 
+         class="footer-logo left">
+
+    <img src="https://akm-img-a-in.tosshub.com/sites/resources/campus/prod/img/logo/2023/8/gtu-logo586440619748.jpg" 
+         alt="GTU Logo" 
+         class="footer-logo right">
+
+    <script>
+        // --- State Management ---
+        let series = [];
+        
+        // --- DOM element references ---
+        let splashScreen, modal, resultContainer, modalSeriesDisplay;
+        let modalNumberInput, modalAddButton, finishButton;
+        let promptNum1, promptNum2, promptText;
+        let finalStatus, cCodeOutput, codeCompilerBox, validatedSeriesDisplay;
+
+        // Main instruction text
+        const INITIAL_PROMPT_MSG = "Enter a value to continue series"; 
+        
+        const ERROR_CODE_MSG = (invalidIndex) => {
+            if (series.length < 3) return "Sorry, wrong! The series is too short. Please enter at least 3 numbers to check the Fibonacci rule.";
+            return `Sorry, wrong! The sequence failed the Fibonacci rule at number ${series[invalidIndex]}. It should have been the sum of its two predecessors: ${series[invalidIndex-2]} + ${series[invalidIndex-1]} = ${series[invalidIndex-2] + series[invalidIndex-1]}.`;
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        // Function to update the series display within the modal
+        function updateModalDisplay() {
+            modalSeriesDisplay.innerHTML = series.map((number, index) => {
+                const isLastTwo = index >= series.length - 2 && series.length >= 2 && index < series.length;
+                const classes = isLastTwo 
+                    ? "bg-blue-600 text-white text-3xl series-chip" 
+                    : "bg-blue-100 text-blue-800 text-2xl series-chip";
+                return `<span data-index="${index}" class="${classes} font-mono font-extrabold px-5 py-2 m-1 rounded-lg shadow-md">${number}</span>`;
+            }).join('');
+        }
+
+        // Function to update the prompt area with the last two digits
+        function updateModalPrompt() {
+            const len = series.length;
+            
+            // Set the main text instruction
+            promptText.textContent = INITIAL_PROMPT_MSG;
+
+            if (len >= 2) {
+                const num1 = series[len - 2];
+                const num2 = series[len - 1];
+                
+                promptNum1.textContent = num1;
+                promptNum2.textContent = num2;
+            } else {
+                // Initial state (series starts with 0 and 1)
+                promptNum1.textContent = '0';
+                promptNum2.textContent = '1';
+            }
+        }
+
+        // Starts the series and shows the modal
+        function startSeries() {
+            // Hide splash screen, show modal
+            splashScreen.classList.add('hidden');
+            modal.classList.remove('hidden');
+            resultContainer.classList.add('hidden'); // Ensure result is hidden
+            document.body.classList.add('overflow-hidden'); // Lock body scroll when modal is up
+
+            // Reset status animation and display
+            // Remove previous success styling
+            finalStatus.className = 'text-3xl font-bold text-center p-4 rounded-lg';
+
+            // Reset validation box visibility
+            validatedSeriesDisplay.classList.add('hidden');
+
+            // Initialize the series with the starting numbers
+            series = [0, 1];
+            
+            updateModalDisplay();
+            updateModalPrompt();
+            
+            modalNumberInput.value = '';
+            modalNumberInput.focus();
+        }
+
+        // Adds a number entered in the modal
+        function addNumberInModal() {
+            const value = modalNumberInput.value.trim();
+            const number = Math.floor(parseInt(value, 10));
+
+            // Basic validation
+            if (value === '' || isNaN(number) || number < 0) {
+                modalNumberInput.classList.add('ring-4', 'ring-red-500');
+                setTimeout(() => modalNumberInput.classList.remove('ring-4', 'ring-red-500'), 500);
+                return;
+            }
+            
+            // Add number, clear input, update display
+            series.push(number);
+            modalNumberInput.value = '';
+            
+            // Update modal UI immediately
+            updateModalDisplay();
+            updateModalPrompt();
+            
+            // Refocus input for the next number
+            modalNumberInput.focus();
+        }
+
+        // Checks Fibonacci validity and moves to the result screen
+        function finishSeries() {
+            // 1. Hide the quiz modal and unlock body scroll
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+
+            // 2. Show the result container
+            resultContainer.classList.remove('hidden');
+            
+            // Reset status class before applying new one
+            finalStatus.className = 'text-3xl font-bold text-center p-4 rounded-lg';
+            
+            let isValid = true;
+            let invalidIndex = -1;
+
+            // 3. Core Fibonacci validation logic
+            if (series.length >= 3) {
+                for (let i = 2; i < series.length; i++) {
+                    if (series[i] !== (series[i - 1] + series[i - 2])) {
+                        isValid = false;
+                        invalidIndex = i;
+                        break;
+                    }
+                }
+            } else {
+                // If length is less than 3, it's considered invalid for the rule check
+                isValid = false; 
+            }
+            
+            // 4. Update UI and C Code based on validation result
+            if (isValid && series.length >= 3) {
+                // SUCCESS: Apply enhanced styling and animation
+                
+                // 4a. Update Status Text with Emojis
+                const successMsg = `🎉 Yeahhh awesome! You have entered correct series values! 🥳`;
+                finalStatus.textContent = successMsg;
+
+                // 4b. Apply Best Font, Green Styling, and Animation
+                finalStatus.classList.add(
+                    'bg-green-100', 'text-green-800', 
+                    'font-serif', 'text-4xl', 'font-extrabold', // Best font/size
+                    'animate-confetti-spray' // The Party Popper animation
+                ); 
+                
+                // 4c. Show and populate the validated series chips
+                validatedSeriesDisplay.classList.remove('hidden');
+                validatedSeriesDisplay.className = 'p-6 rounded-xl shadow-xl bg-white text-gray-800 text-center text-2xl font-mono font-extrabold border-4 border-green-500 flex flex-wrap justify-center gap-3';
+
+                validatedSeriesDisplay.innerHTML = series.map((number) => {
+                    return `<span class="bg-green-200 text-green-800 text-3xl font-extrabold px-4 py-2 m-2 rounded-xl shadow-md">${number}</span>`;
+                }).join('');
+
+                // 4d. C Code Update
+                codeCompilerBox.classList.remove('hidden');
+                cCodeOutput.textContent = generateCCode(series); 
+                cCodeOutput.classList.remove('text-red-400');
+                cCodeOutput.classList.add('text-green-400');
+                
+            } else {
+                // FAILURE
+                // Use the dedicated error message handler
+                const errorMsg = ERROR_CODE_MSG(invalidIndex);
+                finalStatus.textContent = errorMsg;
+
+                // Apply Failure styling
+                finalStatus.classList.add('bg-red-100', 'text-red-800');
+
+                // 4c. Show and populate the series chips, highlighting the error point
+                validatedSeriesDisplay.classList.remove('hidden');
+                validatedSeriesDisplay.className = 'p-6 rounded-xl shadow-xl bg-white text-gray-800 text-center text-2xl font-mono font-extrabold border-4 border-red-500 flex flex-wrap justify-center gap-3';
+
+                validatedSeriesDisplay.innerHTML = series.map((number, index) => {
+                    let chipClasses;
+                    
+                    if (invalidIndex !== -1 && index >= invalidIndex) {
+                        // Highlight the incorrect number and all subsequent numbers in red
+                        // The scale and ring are added to draw attention to the specific number where the error occurred
+                        chipClasses = "bg-red-500 text-white text-3xl font-extrabold px-4 py-2 m-2 rounded-xl shadow-md transform scale-105 ring-4 ring-red-700";
+                    } else if (invalidIndex !== -1 && index < invalidIndex) {
+                        // Correct numbers before the failure point
+                        chipClasses = "bg-green-100 text-green-800 text-3xl font-extrabold px-4 py-2 m-2 rounded-xl shadow-md";
+                    } else {
+                        // Default if invalidIndex is -1 (i.e., less than 3 numbers entered)
+                        chipClasses = "bg-gray-200 text-gray-800 text-3xl font-extrabold px-4 py-2 m-2 rounded-xl shadow-md";
+                    }
+                    return `<span class="${chipClasses}">${number}</span>`;
+                }).join('');
+
+                // Hide the code box
+                codeCompilerBox.classList.add('hidden'); 
+            }
+        }
+        
+        // Function to generate C code representation of the verified series (no comments)
+        function generateCCode(fibSeries) {
+            const seriesString = fibSeries.map(n => n.toString()).join(', '); 
+            const len = fibSeries.length;
+            
+            let code = `#include <stdio.h>\n\n`;
+            
+            code += `int main() {\n`;
+
+            if (fibSeries.length === 0) {
+                code += `    printf("Series is empty.\\n");\n`;
+            } else {
+                
+                code += `    int userSeries[${len}] = {${seriesString}};\n\n`;
+                
+                code += `    printf("Verified Series: ");\n`;
+
+                code += `    for (int i = 0; i < ${len}; i++) {\n`;
+                code += `        printf("%d", userSeries[i]);\n`;
+                code += `        if (i < ${len} - 1) {\n`;
+                code += `            printf(", ");\n`;
+                code += `        }\n`;
+                code += `    }\n`;
+                code += `    printf("\\n");\n`;
+            }
+            
+            code += `    return 0;\n`;
+            code += `}`;
+            return code;
+        }
+
+        // Function to handle starting a new series from the result screen
+        function startNewSeries() {
+            // Reset state
+            series = [];
+            
+            // Hide result, show Quiz Modal
+            resultContainer.classList.add('hidden');
+            
+            // Call startSeries to re-initialize the modal view
+            startSeries();
+        }
+
+        // --- Initialization and Event Attachments ---
+
+        function initApp() {
+            // Get DOM elements
+            splashScreen = document.getElementById('splash-screen');
+            modal = document.getElementById('series-builder-modal');
+            resultContainer = document.getElementById('result-container');
+            
+            modalSeriesDisplay = document.getElementById('modal-series-display');
+            modalNumberInput = document.getElementById('modal-number-input');
+            modalAddButton = document.getElementById('modal-add-button');
+            finishButton = document.getElementById('finish-button');
+            
+            promptNum1 = document.getElementById('prompt-num1');
+            promptNum2 = document.getElementById('prompt-num2');
+            promptText = document.getElementById('prompt-text');
+            
+            finalStatus = document.getElementById('final-status');
+            cCodeOutput = document.getElementById('c-code-output');
+            codeCompilerBox = document.getElementById('code-compiler-box');
+            validatedSeriesDisplay = document.getElementById('validated-series-display');
+
+            // Attach Event Listeners
+            document.getElementById('start-button').addEventListener('click', startSeries);
+            document.getElementById('start-new-button').addEventListener('click', startNewSeries);
+            modalAddButton.addEventListener('click', addNumberInModal);
+            finishButton.addEventListener('click', finishSeries);
+            
+            // Handle Enter keypress on the input field for adding numbers
+            modalNumberInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    addNumberInModal();
+                }
+            });
+
+            // Initial setup when the page loads (only splash screen visible)
+            series = [];
+            splashScreen.classList.remove('hidden');
+            modal.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Wait for the entire DOM content to load before initializing the app
+        window.addEventListener('load', initApp);
+    </script>
+</body>
+</html>
